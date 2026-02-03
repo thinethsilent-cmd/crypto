@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Authority | Settlement Desk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #e2e8f0;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.4s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Login Page -->
+    <div id="auth-page" class="flex items-center justify-center min-h-screen p-4">
+        <div class="glass-card w-full max-w-sm p-10 rounded-2xl shadow-2xl border-blue-500/20">
+            <div class="flex flex-col items-center mb-8">
+                <div class="text-blue-500 mb-4">
+                    <i data-lucide="shield-check" class="w-12 h-12"></i>
+                </div>
+                <h1 class="text-xl font-black text-white uppercase tracking-tighter">Market Authority</h1>
+                <p class="text-slate-500 text-[9px] uppercase tracking-[0.4em] font-bold mt-1 text-center leading-relaxed">
+                    Centralized Settlement Protocol<br/>Restricted Access
+                </p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <input type="email" id="email" placeholder="ADMIN ID" required 
+                    class="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl text-white outline-none focus:border-blue-600 transition-all font-mono text-xs">
+                <input type="password" id="password" placeholder="SECURE KEY" required 
+                    class="w-full bg-slate-950 border border-slate-800 px-4 py-3 rounded-xl text-white outline-none focus:border-blue-600 transition-all font-mono text-xs">
+                <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-900/20 hover:bg-blue-700 transition-colors">
+                    Establish Secure Link
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Admin Dashboard -->
+    <div id="admin-page" class="hidden min-h-screen p-4 md:p-10 flex flex-col items-center">
+        <div class="w-full max-w-6xl space-y-10">
+            
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
+                            <i data-lucide="activity" class="w-6 h-6"></i>
+                        </div>
+                        <h2 class="text-2xl font-black text-white uppercase tracking-tighter">Settlement Authority</h2>
+                    </div>
+                    <p class="text-slate-500 font-bold text-[9px] uppercase tracking-[0.3em]">Verification and balance clearance</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="bg-slate-900 px-6 py-3 rounded-2xl border border-slate-800 flex flex-col">
+                        <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Queue Size</span>
+                        <span id="stat-pending" class="text-lg font-black text-amber-400">0</span>
+                    </div>
+                    <div class="bg-slate-900 px-6 py-3 rounded-2xl border border-slate-800 flex flex-col">
+                        <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Dep Volume</span>
+                        <span id="stat-deposits" class="text-lg font-black text-emerald-400">$0.00</span>
+                    </div>
+                    <button id="logout-btn" class="bg-slate-900 hover:bg-slate-800 px-4 rounded-xl border border-slate-800 flex items-center justify-center text-slate-500 hover:text-rose-500 transition-colors">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pending List -->
+            <div id="pending-container" class="space-y-6">
+                <!-- Items will be injected here -->
+                <div id="empty-state" class="p-32 flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-3xl opacity-30 text-center">
+                    <i data-lucide="check-circle-2" class="w-12 h-12 mb-4"></i>
+                    <p class="font-black uppercase tracking-[0.2em] text-xs">Clearing queue is healthy</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="pt-20 pb-10 flex flex-col items-center gap-3 opacity-20">
+                <i data-lucide="shield-check" class="text-blue-500 w-6 h-6"></i>
+                <p class="text-[9px] font-black uppercase tracking-[0.5em] text-center">Protocol Level Settlement Security Active</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Config & Initialization ---
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'crypto-x-957b1';
+
+        const authPage = document.getElementById('auth-page');
+        const adminPage = document.getElementById('admin-page');
+        const loginForm = document.getElementById('login-form');
+        const pendingContainer = document.getElementById('pending-container');
+        const emptyState = document.getElementById('empty-state');
+
+        // --- Authentication Logic (Rule 3) ---
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                // We keep it on the login page by default, but Rule 3 mandates an initial sign in
+                // to allow listeners to start if a token exists. 
+                // If not, anonymous sign-in is used as a placeholder to prevent permission errors.
+                await signInAnonymously(auth);
+            }
+        };
+        initAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            // In a real app, we check if user is an admin here.
+            // For this environment, we just toggle visibility based on if they filled the form or had a token.
+            if (user && !user.isAnonymous) {
+                authPage.classList.add('hidden');
+                adminPage.classList.remove('hidden');
+                startDataListener();
+            } else {
+                authPage.classList.remove('hidden');
+                adminPage.classList.add('hidden');
+            }
+            lucide.createIcons();
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (err) {
+                console.error("Login failed:", err);
+                alert("Security Link Failed: Invalid Admin Credentials");
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // --- Settlement Logic ---
+        async function handleAction(id, userId, type, amount, action) {
+            try {
+                const transactionRef = doc(db, 'artifacts', appId, 'public', 'data', 'transactions', id);
+                
+                // 1. Update Transaction Status
+                await updateDoc(transactionRef, {
+                    status: action,
+                    resolvedAt: serverTimestamp()
+                });
+
+                // 2. Atomic Balance Update (Rule 1)
+                if (action === 'approved') {
+                    const profileRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+                    const balanceChange = type === 'deposit' ? amount : -amount;
+                    
+                    await updateDoc(profileRef, {
+                        balance: increment(balanceChange)
+                    });
+                }
+                
+                console.log(`Transaction ${action}`);
+            } catch (err) {
+                console.error("Action failed:", err);
+            }
+        }
+
+        // --- Data Listener ---
+        let unsub = null;
+        function startDataListener() {
+            if (unsub) unsub();
+
+            const q = query(
+                collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), 
+                where('status', '==', 'pending')
+            );
+
+            unsub = onSnapshot(q, (snapshot) => {
+                let pendingItems = [];
+                let totalDepVolume = 0;
+
+                snapshot.forEach(doc => {
+                    const data = { id: doc.id, ...doc.data() };
+                    pendingItems.push(data);
+                    if (data.type === 'deposit') {
+                        totalDepVolume += parseFloat(data.amount || 0);
+                    }
+                });
+
+                renderPendingList(pendingItems);
+                updateStats(pendingItems.length, totalDepVolume);
+            }, (err) => {
+                console.error("Firestore error:", err);
+            });
+        }
+
+        function updateStats(count, volume) {
+            document.getElementById('stat-pending').innerText = count;
+            document.getElementById('stat-deposits').innerText = `$${volume.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        }
+
+        function renderPendingList(items) {
+            // Preserve the empty state div if needed
+            pendingContainer.innerHTML = '';
+            
+            if (items.length === 0) {
+                pendingContainer.appendChild(emptyState);
+                return;
+            }
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "glass-card p-8 flex flex-col xl:flex-row justify-between items-center gap-10 border-l-4 border-l-blue-600 shadow-xl group animate-slide-in";
+                
+                const isDeposit = item.type === 'deposit';
+                
+                card.innerHTML = `
+                    <div class="flex flex-col gap-1 flex-1 w-full">
+                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="user" class="w-3 h-3"></i> Trading Profile
+                        </span>
+                        <p class="text-2xl font-black text-white uppercase tracking-tighter">${item.userName || 'Unknown Trader'}</p>
+                        <p class="text-[10px] font-mono text-slate-500 bg-black/40 px-2 py-1 rounded w-fit mt-1">UID: ${item.userId}</p>
+                    </div>
+
+                    <div class="flex-1 w-full max-w-xl">
+                        <div class="bg-black/60 border border-slate-800/50 p-5 rounded-2xl group-hover:border-blue-900/50 transition-colors">
+                            <p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <i data-lucide="external-link" class="w-3 h-3"></i> ${isDeposit ? 'Blockchain TXID Proof' : 'Recipient Wallet (TRC20)'}
+                            </p>
+                            <p class="text-[11px] font-mono text-slate-300 break-all select-all leading-relaxed font-bold">${item.txid || 'No Proof Provided'}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center md:items-end justify-center w-full xl:w-72">
+                        <div class="flex flex-col items-center xl:items-end mb-6">
+                            <span class="text-[10px] font-black uppercase tracking-[0.2em] mb-1 px-3 py-1 rounded-full ${isDeposit ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+                                ${item.type.toUpperCase()} OPERATION
+                            </span>
+                            <p class="text-5xl font-black text-white tracking-tighter">$${(item.amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                        </div>
+
+                        <div class="flex gap-4 w-full">
+                            <button onclick="window.triggerSettlement('${item.id}', '${item.userId}', '${item.type}', ${item.amount}, 'rejected')" 
+                                class="flex-1 border border-slate-700 text-slate-400 hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/20 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
+                                Deny
+                            </button>
+                            <button onclick="window.triggerSettlement('${item.id}', '${item.userId}', '${item.type}', ${item.amount}, 'approved')" 
+                                class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
+                                Clear Funds
+                            </button>
+                        </div>
+                    </div>
+                `;
+                pendingContainer.appendChild(card);
+            });
+            
+            lucide.createIcons();
+        }
+
+        // Expose to window for inline onclicks
+        window.triggerSettlement = handleAction;
+
+        // Initial icon render
+        lucide.createIcons();
+    </script>
+</body>
+</html>
